@@ -8,6 +8,9 @@ venv/touchfile: requirements.txt
 travel: env
 	. venv/bin/activate; streamlit run travel_demo.py
 
+howto: env
+	. venv/bin/activate; streamlit run howto_demo.py
+
 clean:
 	rm -rf venv
 	find -iname "*.pyc" -delete
