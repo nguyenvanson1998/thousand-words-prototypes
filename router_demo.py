@@ -5,6 +5,9 @@ import sys
 from typing import List
 
 from llama_index.core import StorageContext, load_index_from_storage
+from llama_index.core.query_engine.router_query_engine import RouterQueryEngine
+from llama_index.core.selectors.llm_selectors import LLMSingleSelector, LLMMultiSelector
+from llama_index.core.tools.query_engine import QueryEngineTool
 from llama_index.llms.openai import OpenAI
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.vector_stores.milvus import MilvusVectorStore
@@ -16,11 +19,43 @@ import streamlit as st
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
-STORAGE = "./storage/travel-69k-bge-small-en-384"
+HOWTO_STORAGE = "./storage/howto-212k-bge-small-en-384"
+HOWTO_COLLECTION = "howto212k"
+TRAVEL_STORAGE = "./storage/travel-69k-bge-small-en-384"
+TRAVEL_COLLECTION = "travel69k"
+
 EMBED = "BAAI/bge-small-en-v1.5"
 EMBED_DIMS = 384
 RESPONSE_MODE = "tree_summarize"
-COLLECTION = "travel69k"
+
+
+class HowToStep(BaseModel):
+    """How to step data model"""
+
+    description: str = Field(
+        description=
+        "description of specific step to take in series of steps to solve problem / accomplish task"
+    )
+    url: str = Field(description="link to the source youtube video")
+    scene: int = Field(
+        description=
+        "relevant video scene number in source video, only provide an integer number"
+    )
+    timestamp: int = Field(
+        description=
+        "relevant timestamp of scene source video, only provide an integer number"
+    )
+
+
+class HowToSteps(BaseModel):
+    """Data model for how to step extracted information."""
+
+    steps: List[HowToStep] = Field(
+        description="List of steps to take to solve problem / accomplish task")
+    summary: str = Field(
+        description=
+        "High level summary / commentary on how to solve problem / accomplish. task"
+    )
 
 
 class NotablePlaceMention(BaseModel):
@@ -59,6 +94,30 @@ class NotablePlaceMentionsSummary(BaseModel):
     )
 
 
+def get_milvus_query_engine(collection_name,
+                            storage_dir,
+                            output_cls,
+                            llm,
+                            response_mode=RESPONSE_MODE):
+    vector_store = MilvusVectorStore(dim=EMBED_DIMS,
+                                     uri=os.getenv('MILVUS_HOST'),
+                                     token=os.getenv('MILVUS_TOKEN'),
+                                     overwrite=False,
+                                     collection_name=collection_name)
+    storage_context = StorageContext.from_defaults(vector_store=vector_store,
+                                                   persist_dir=storage_dir)
+    index = load_index_from_storage(storage_context=storage_context)
+
+    query_engine = index.as_query_engine(
+        output_cls=output_cls,
+        response_mode=response_mode,
+        llm=llm,
+        verbose=True,
+    )
+
+    return query_engine
+
+
 @st.cache_resource
 def load_query_engine():
     embed_model = HuggingFaceEmbedding(model_name=EMBED)
@@ -68,46 +127,60 @@ def load_query_engine():
     Settings.embed_model = embed_model
     Settings.llm = llm
 
-    vector_store = MilvusVectorStore(dim=EMBED_DIMS,
-                                     uri=os.getenv('MILVUS_HOST'),
-                                     token=os.getenv('MILVUS_TOKEN'),
-                                     overwrite=False,
-                                     collection_name=COLLECTION)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store,
-                                                   persist_dir=STORAGE)
-    index = load_index_from_storage(storage_context=storage_context)
+    howto_query_engine = get_milvus_query_engine(HOWTO_COLLECTION,
+                                                 HOWTO_STORAGE, HowToSteps,
+                                                 llm)
+    place_query_engine = get_milvus_query_engine(TRAVEL_COLLECTION,
+                                                 TRAVEL_STORAGE,
+                                                 NotablePlaceMentionsSummary,
+                                                 llm)
 
-    query_engine = index.as_query_engine(
-        output_cls=NotablePlaceMentionsSummary,
-        response_mode=RESPONSE_MODE,
-        llm=llm,
-        verbose=True,
+    howto_tool = QueryEngineTool.from_defaults(
+        query_engine=howto_query_engine,
+        description=
+        "Useful for retrieving information about how to accomplish specific tasks",
+    )
+    place_tool = QueryEngineTool.from_defaults(
+        query_engine=place_query_engine,
+        description=
+        "Useful for retrieving information about notable places like restaurants, tourist attractions, shopping, landmarks, etc.",
     )
 
-    return query_engine, index.index_id
+    # Create Router Query Engine
+    query_engine = RouterQueryEngine(
+        selector=LLMSingleSelector.from_defaults(),
+        query_engine_tools=[
+            place_tool,
+            howto_tool,
+        ],
+    )
+
+    return query_engine
 
 
-query_engine, index_id = load_query_engine()
+query_engine = load_query_engine()
 
 # =====  Start Main Stream Lit App ===== #
 
 with st.sidebar:
     st.title("Thousand Words Video Explorer")
     st.markdown(f"""
-Loaded Index: `{STORAGE.split('/')[-1]}`
+Loaded Indices: `{HOWTO_STORAGE.split('/')[-1]}, {TRAVEL_STORAGE.split('/')[-1]}`
 
 """)
     st.markdown("""
 Info:
 
-* Index contains ~69.3K YouTube videos that appeared to be english language and were in the "Travel & Events" youtube category
-* This simple video DB is representing over 3k hours of video (i.e. ~127 days of audio/visual information)
+* Index contains ~282.1K YouTube videos that appeared to be english language and were in the "How To & Style" or "Travel & Events" youtube category
+* This simple video DB is representing over 12.4k hours of video (i.e. ~1.42 years of audio/visual information)
 
 Example Queries:
 
-* `what is the best museum in paris?`
-* `where can i find the best pizza in nyc?`
-* `what are the top tourist attractions in vietnam?`
+* `what is the best museum in paris aside from the lourve?`
+* `how do I repair a loose toilet flusher?`
+* `what are the top 5 places in england to visit for a harry potter fan?`
+* `show me the best steakhouses in new york city`
+* `show me step by step how to make mapu tofu`
 
 """)
 
@@ -123,8 +196,26 @@ for message in st.session_state.messages:
             print(response)
             print(type(response.response))
             st.text("Here's what I found:")
-            if str(type(response.response)
-                   ) == "<class '__main__.NotablePlaceMentionsSummary'>":
+            if str(type(response.response)) == "<class '__main__.HowToSteps'>":
+                st.markdown(response.response.summary)
+                for no, m in enumerate(response.response.steps):
+                    st.header(f'Step {no}')
+                    st.markdown(m.description)
+                    if m.url:
+                        split = m.url[len('https://www.youtube.com/watch?v='
+                                          ):] + '_split_' + f'{m.scene:05d}'
+                        col1, col2 = st.columns(2)
+                        with col1:
+                            st.image(
+                                f"https://storage.cloud.google.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
+                            )
+                            st.text("clip preview")
+                        with col2:
+                            st.video(m.url,
+                                     format="video/mp4",
+                                     start_time=m.timestamp)
+            elif str(type(response.response)
+                     ) == "<class '__main__.NotablePlaceMentionsSummary'>":
                 st.markdown(response.response.summary)
                 for m in response.response.place_mentions:
                     st.header(m.name)
@@ -165,8 +256,26 @@ if prompt := st.chat_input("What is up?"):
         print(response)
         print(type(response.response))
         st.text("Here's what I found:")
-        if str(type(response.response)
-               ) == "<class '__main__.NotablePlaceMentionsSummary'>":
+        if str(type(response.response)) == "<class '__main__.HowToSteps'>":
+            st.markdown(response.response.summary)
+            for no, m in enumerate(response.response.steps):
+                st.header(f'Step {no}')
+                st.markdown(m.description)
+                if m.url:
+                    split = m.url[len('https://www.youtube.com/watch?v='
+                                      ):] + '_split_' + f'{m.scene:05d}'
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.image(
+                            f"https://storage.cloud.google.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
+                        )
+                        st.text("clip preview")
+                    with col2:
+                        st.video(m.url,
+                                 format="video/mp4",
+                                 start_time=m.timestamp)
+        elif str(type(response.response)
+                 ) == "<class '__main__.NotablePlaceMentionsSummary'>":
             st.markdown(response.response.summary)
             for m in response.response.place_mentions:
                 st.header(m.name)
