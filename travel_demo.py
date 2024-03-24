@@ -96,21 +96,21 @@ query_engine, index_id = load_query_engine()
 with st.sidebar:
     st.title("Thousand Words Video Explorer")
     st.markdown(f"""
-Index Info: 
+Loaded Index: `{STORAGE.split('/')[-1]}`
 
-* Path: `{STORAGE}`
-* Index ID: `{index_id}`
-* Output Parsers: `HowTo`
-* Query Engine LLM: `GPT-3.5 Turbo`
-* Embedding Model: `{EMBED}`
-* Video Doc Parser: `scene video caption + transcript`
 """)
     st.markdown("""
-Demo Notes:
+Info:
 
-* For this simple demo we created an indexed video database over a subset of Panda70M public video dataset
-* In particular we selected ~69K videos that appeared to be english language, and were in the youtube category of "Travel & Events"
-* This simple video DB is representing ~3k hours of video (i.e. ~127 days of audio/visual information)
+* Index contains ~69.3K YouTube videos that appeared to be english language and were in the "Travel & Events" youtube category
+* This simple video DB is representing over 3k hours of video (i.e. ~127 days of audio/visual information)
+
+Example Queries:
+
+* `what is the best museum in paris?`
+* `where can i find the best pizza in nyc?`
+* `what are the top tourist attractions in vietnam?`
+
 """)
 
 if "messages" not in st.session_state:
