@@ -17,11 +17,11 @@ import streamlit as st
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logging.getLogger().addHandler(logging.StreamHandler(stream=sys.stdout))
 
-STORAGE = "./storage/travel-69k-bge-small-en-384" #"./storage/travel-test"
+STORAGE = "./storage/travel-69k-bge-small-en-384"
 EMBED = "BAAI/bge-small-en-v1.5"
 EMBED_DIMS = 384
 RESPONSE_MODE = "tree_summarize"
-COLLECTION = "travel69k" #"test"
+COLLECTION = "travel69k"
 
 class NotablePlaceMention(BaseModel):
     """Notable place mention data model"""
