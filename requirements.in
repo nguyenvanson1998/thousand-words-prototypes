@@ -1,0 +1,10 @@
+dataclasses-json<0.6.0
+grpcio==1.60.0
+llama-index
+llama-index-llms-openai
+llama-index-embeddings-huggingface 
+llama-index-vector-stores-milvus
+llama-index-program-openai
+pydantic<2
+transformers
+streamlit
