@@ -146,7 +146,7 @@ llama-index-agent-openai==0.1.7
     #   llama-index-program-openai
 llama-index-cli==0.1.11
     # via llama-index
-llama-index-core==0.10.23.post1
+llama-index-core==0.10.24.post1
     # via
     #   llama-index
     #   llama-index-agent-openai
@@ -172,7 +172,7 @@ llama-index-indices-managed-llama-cloud==0.1.5
     # via llama-index
 llama-index-legacy==0.9.48
     # via llama-index
-llama-index-llms-openai==0.1.12
+llama-index-llms-openai==0.1.22
     # via
     #   -r requirements.in
     #   llama-index
@@ -246,8 +246,9 @@ numpy==1.26.4
     #   scipy
     #   streamlit
     #   transformers
-openai==1.14.2
+openai==1.34.0
     # via
+    #   -r requirements.in
     #   llama-index-core
     #   llama-index-legacy
 packaging==23.2
