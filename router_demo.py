@@ -229,7 +229,7 @@ for message in st.session_state.messages:
                         col1, col2 = st.columns(2)
                         with col1:
                             st.image(
-                                f"https://storage.cloud.google.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
+                                f"https://storage.googleapis.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
                             )
                             st.text("clip preview")
                         with col2:
@@ -267,7 +267,7 @@ if prompt := st.chat_input("What is up?"):
                     col1, col2 = st.columns(2)
                     with col1:
                         st.image(
-                            f"https://storage.cloud.google.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
+                            f"https://storage.googleapis.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
                         )
                         st.text("clip preview")
                     with col2:
@@ -289,7 +289,7 @@ if prompt := st.chat_input("What is up?"):
                     col1, col2 = st.columns(2)
                     with col1:
                         st.image(
-                            f"https://storage.cloud.google.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
+                            f"https://storage.googleapis.com/kdr-public/pandas70m/howto-travel/img/clip-start/{split}.jpg"
                         )
                         st.text("clip preview")
                     with col2:
