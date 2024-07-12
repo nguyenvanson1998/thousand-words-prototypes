@@ -121,7 +121,7 @@ def get_milvus_query_engine(collection_name,
 @st.cache_resource
 def load_query_engine():
     embed_model = HuggingFaceEmbedding(model_name=EMBED)
-    llm = OpenAI(model="gpt-4o", temperature=0.2)
+    llm = OpenAI(model="gpt-3.5-turbo", temperature=1)
 
     from llama_index.core import Settings
     Settings.embed_model = embed_model
