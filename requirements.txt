@@ -132,6 +132,8 @@ jinja2==3.1.3
     #   altair
     #   pydeck
     #   torch
+jiter==0.7.1
+    # via openai
 joblib==1.3.2
     # via nltk
 jsonschema==4.21.1
@@ -146,7 +148,7 @@ llama-index-agent-openai==0.1.7
     #   llama-index-program-openai
 llama-index-cli==0.1.11
     # via llama-index
-llama-index-core==0.10.24.post1
+llama-index-core==0.10.68.post1
     # via
     #   llama-index
     #   llama-index-agent-openai
@@ -172,7 +174,7 @@ llama-index-indices-managed-llama-cloud==0.1.5
     # via llama-index
 llama-index-legacy==0.9.48
     # via llama-index
-llama-index-llms-openai==0.1.22
+llama-index-llms-openai==0.1.31
     # via
     #   -r requirements.in
     #   llama-index
@@ -199,9 +201,7 @@ llama-index-vector-stores-milvus==0.1.6
 llama-parse==0.3.9
     # via llama-index-readers-llama-parse
 llamaindex-py-client==0.1.13
-    # via
-    #   llama-index-core
-    #   llama-index-indices-managed-llama-cloud
+    # via llama-index-indices-managed-llama-cloud
 markdown-it-py==3.0.0
     # via rich
 markupsafe==2.1.5
@@ -246,11 +246,11 @@ numpy==1.26.4
     #   scipy
     #   streamlit
     #   transformers
-openai==1.34.0
+openai==1.55.0
     # via
     #   -r requirements.in
-    #   llama-index-core
     #   llama-index-legacy
+    #   llama-index-llms-openai
 packaging==23.2
     # via
     #   altair
@@ -285,6 +285,7 @@ pydantic==1.10.14
     # via
     #   -r requirements.in
     #   huggingface-hub
+    #   llama-index-core
     #   llamaindex-py-client
     #   openai
 pydeck==0.8.1b0
@@ -394,7 +395,7 @@ transformers==4.39.1
     # via
     #   -r requirements.in
     #   llama-index-embeddings-huggingface
-typing-extensions==4.10.0
+typing-extensions==4.12.2
     # via
     #   altair
     #   anyio
@@ -424,7 +425,9 @@ urllib3==2.2.1
     #   minio
     #   requests
 wrapt==1.16.0
-    # via deprecated
+    # via
+    #   deprecated
+    #   llama-index-core
 yarl==1.9.4
     # via aiohttp
 
